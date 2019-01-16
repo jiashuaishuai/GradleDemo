@@ -1,4 +1,7 @@
 apply plugin: 'com.android.application'
+//配置自定义插件
+apply plugin: 'com.plugindemo'
+
 
 android {
     compileSdkVersion 28

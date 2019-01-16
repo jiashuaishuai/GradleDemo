@@ -1,0 +1,25 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+dependencies {
+    //gradle sdk
+    compile gradleApi()
+    //groovy sdk
+    compile localGroovy()
+}
+
+repositories {
+    mavenCentral()
+}
+//创建本地仓库  打开右侧gradle，plugindemo下的upload 执行uploadArchives
+//或者./gradlew uploadArchives
+//生成目录 repo/com/plugindemo/plugin/plugindemo/1.0.0
+group='com.plugindemo'
+version='1.0.0'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('../repo'))
+        }
+    }
+}
