@@ -63,7 +63,7 @@ android {
 ```
 **资源文件优先级**
 资源和mainfests的优先级是这样的：
-![](https://github.com/jiashuaishuai/GradleDemo/15476188913749.jpg)
+![](https://github.com/jiashuaishuai/GradleDemo/blob/master/15476188913749.jpg)
 
 如果一个资源在main中和在flavor中定义了，那么那个在flavor中的资源有更高的优先级。这样那个在flavor文件夹中的资源将会被打包到apk。而在依赖项目申明的资源总是拥有最低优先级。
 
