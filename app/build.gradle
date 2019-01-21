@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 //配置自定义插件
 apply plugin: 'com.plugindemo'
 
-
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -79,20 +78,59 @@ android {
         }
     }
 
-
-    task printFlavor() {
+    task printFlavor {
+        //自定义任务属性 使用方法 printFlavor.myProperty
+        ext.myProperty = "myValue"
         group "userDefined"
         description "输出一哈Flavor组合"
         applicationVariants.all {
             println it.name
         }
-
+        println "----------------taskNames-----------"
+        println gradle.startParameter.taskNames.toString()
+    }
+    //取消任务
+    //tasks会获取当前project中所有的task，enabled属性控制任务开关，whenTaskAdded后面的闭包会在gradle配置阶段完成。
+    tasks.whenTaskAdded { task ->
+        if (task.name.contains('AndroidTest')) {
+            task.enabled = false
+        }
     }
 
+    //动态任务
+    4.times {
+        counter ->
+            task "task$counter" << {
+                group "userdefined"
+                println "Im task number $counter"
+            }
+    }
+    //加入任务 执行顺序2，3，0
+    task0.dependsOn task2, task3
 
+    task0.doFirst {
+        println "Hello doFirst " + printFlavor.myProperty
+    }
+    task0.doLast {
+        println "hello doLast"
+    }
+    task0 << {
+        println "hello <<"
+    }
+    //默认任务 gradle -q
+    //等价于 gradle clean run.
+    // 在一个多项目构建中, 每一个子项目都可以有它特别的默认任务. 如果一个子项目没有特别的默认任务, 父项目的默认任务将会被执行.
+    defaultTasks "dTask1", "dTask2"
+
+    task dTask1 << {
+        println "Hello dTask1"
+    }
+    task dTask2 << {
+        println "Hello dTask2"
+    }
 }
 
-def appendVersionNameVersionCode(variant, defaultConfig) {
+static def appendVersionNameVersionCode(variant, defaultConfig) {
     variant.outputs.each { output ->
 //        if (output.zipAlign) {
         def file = output.outputFile
@@ -115,4 +153,13 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+pluginExt {
+    param1 = 'app param1'
+    param2 = 'app param2'
+    nestExt {
+        nestParam1 = 'app nestParam1'
+        nestParam2 = 'app nestParam2'
+
+    }
 }
