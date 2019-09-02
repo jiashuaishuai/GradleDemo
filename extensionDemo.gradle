@@ -1,0 +1,210 @@
+class Foo {
+    int age
+    String name
+
+    String toString() {
+        return "name = ${name}, age = ${age}"
+    }
+}
+
+extensions.create("foo", Foo)
+foo {
+    age = 11
+    name = "ulquiorra"
+}
+task testExt() {
+    doLast {
+        println foo
+    }
+}
+
+//-----------------------------------------构建方法-----------------------------------------
+/**
+ * <T> T create​(String name, Class<T> type, Object... constructionArguments)
+ * <T> T create​(Class<T> publicType, String name, Class<? extends T> instanceType, Object... constructionArguments)
+ * publicType：创建的 Extension 实例暴露出来的类类型；
+ * name：要创建的Extension的名字，可以是任意符合命名规则的字符串，不能与已有的重复，否则会抛异常；
+ * instanceType：该Extension的类类型；
+ * constructionArguments：类的构造函数参数值
+ * 创建的 Extension 对象都默认实现了 ExtensionAware 接口，
+ **/
+
+class Animal {
+    String name
+    int legs
+
+    Animal(String name) {
+        this.name = name
+    }
+
+    String toString() {
+        return "This animal is $name, it has ${legs} legs."
+    }
+}
+
+class Pig extends Animal {
+    int age
+    String owner
+
+    Pig(int age, String owner) {
+        super("Pig")
+        this.age = age
+        this.owner = owner
+    }
+
+    String toString() {
+        return super.toString() + " Its age is $age, its owner is $owner."
+    }
+}
+
+extensions.create("pig", Pig, 5, "kobe")
+//add没返回值，create有返回值，其他一样
+extensions.add(Animal, "anim", new Pig(3, "hjy"))
+
+pig {
+    legs = 2
+}
+anim {
+    setLegs 4
+}
+task testExt1() {
+    doLast {
+        println anim
+        println pig
+        //验证 aPig 对象是 ExtensionAware 类型的
+        println "aPig is a instance of ExtensionAware : ${pig instanceof ExtensionAware}"
+    }
+}
+
+
+//---------------------------------------------查找-----------------------------------------
+println extensions.findByName("pig")
+println extensions.findByType(Pig)
+println extensions.getByName("pig")
+println extensions.getByType(Pig)
+
+
+//----------------------------------嵌套Extension-------------------------------
+//这里的关键点在于下面这2个方法的定义，只需要定义任意一个即可：
+//
+//void inner(Action<InnerExt> action)
+//void inner(Closure c)
+
+// 还有一种不常用 这种方法没法自动复制到OuterExt类莉的innerExt对象  def innerExt = outExt.getExtensions().create("inner", InnerExt)
+
+class InnerExt {
+    String innerName
+    String msg
+
+    void innerName(String name) {
+        innerName = name
+    }
+
+//    void msg(String msg) {
+//        this.msg = msg
+//    }
+
+    String toString() {
+        return "InnerExt[ name = ${innerName}, msg = ${msg}]"
+    }
+}
+
+class OuterExt {
+    String outerName
+    String msg
+    InnerExt innerExt = new InnerExt()
+
+
+    //创建内部Extension，名称为方法名 inner
+    void inner(Action<InnerExt> action) {
+        action.execute(innerExt)
+    }
+
+    // //创建内部Extension，名称为方法名 inner  两种方法二选一
+//    void inner(Closure c) {
+//        org.gradle.util.ConfigureUtil.configure(c, innerExt)
+//    }
+
+    String toString() {
+        return "OuterExt[ name = ${outerName}, msg = ${msg}] " + innerExt
+    }
+
+}
+
+extensions.create("outer", OuterExt)
+
+outer {
+    outerName "outer"
+    msg "this is a outer message."
+
+    inner {
+        //嵌套extension 内部类需要重写 变量赋值方法，否则报错
+        innerName "inner"
+        msg = "This is a inner message."
+    }
+
+}
+println outer
+
+//android 内部 的 extension 嵌套关键类BaseExtension
+// android 的 Extension是通过插件创建的
+
+
+//-------------------------------------NamedDomainObjectContainer------------------------------
+class TestDomainObj {
+    String name//name必须包含
+    String msg
+
+    public TestDomainObj(String name) {
+        this.name = name
+    }
+
+    void msg(String msg) {
+        this.msg = msg
+    }
+
+    @Override
+    String toString() {
+        return "name = ${name}, msg = ${msg}"
+    }
+}
+
+class TestExtension {
+    NamedDomainObjectContainer<TestDomainObj> testDomains
+
+    public TestExtension(Project project) {
+        testDomains = project.container(TestDomainObj)
+    }
+
+    void testDomain(Action<NamedDomainObjectContainer<TestDomainObj>> action) {
+        action.execute(testDomains)
+    }
+
+    void test() {
+        testDomains.all {
+            println it
+        }
+    }
+}
+
+extensions.create("testDom", TestExtension, project)
+
+testDom {
+    testDomain {
+        domain2 {
+            msg "This is domain2"
+        }
+        domain1 {
+            msg "This is domain1"
+        }
+        domain3 {
+            msg "This is domain3"
+        }
+    }
+}
+
+task domTask{
+    doLast{
+        testDom.test()
+    }
+}

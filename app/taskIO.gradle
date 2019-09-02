@@ -1,0 +1,70 @@
+task testIO {
+    inputs.property("name", "Ulquiorra")
+    inputs.property("age", 20)
+    outputs.file("$buildDir/test")
+    doLast {
+        println "exit task testIO"
+    }
+}
+task testIO2() {
+    doLast {
+        println "exit task testIO2"
+    }
+}
+
+
+class SayHelloTask extends DefaultTask {
+    @Input
+    String username
+    @Input
+    int age
+    //注意file和Directory
+    @OutputFile
+    File destDir
+
+    @TaskAction
+    void sayHell() {
+        destDir.withPrintWriter { writer ->
+            properties.each {
+                writer.println it
+            }
+        }
+    }
+}
+
+//demo1
+task testOutTest(type: SayHelloTask) {
+    age = 18
+    username = "Ulquiorra"
+    destDir = file("$buildDir/test.txt")
+}
+task actionTest(){
+    doLast{
+        println "action test start"
+    }
+}
+task actionTest1{
+    actionTest.getActions().each{
+        it.execute(null)
+    }
+    doLast{
+        println "action2 test start"
+    }
+}
+
+
+//demo2ClosureTaskAction
+task combineFileContentNonIncremental {
+    def sources = fileTree('src')
+    def destination = file('destination.txt')
+
+    inputs.dir sources
+    outputs.file destination
+    doLast {
+        destination.withPrintWriter { writer ->
+            sources.each { source ->
+                writer.println source.text
+            }
+        }
+    }
+}

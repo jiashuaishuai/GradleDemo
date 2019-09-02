@@ -1,0 +1,110 @@
+println "buildDir-- " + buildDir.absolutePath
+println "buildFile-- " + buildFile.absolutePath
+println "sourceURI-- " + buildscript.sourceFile.absolutePath
+description '测试project'
+println "description-- " + description
+println "name-- " + name
+println "project path-- " + path
+
+class VersionInfo {
+    String version
+    boolean release
+
+    VersionInfo(String v, boolean release) {
+        version = v
+        this.release = release
+    }
+
+    String toString() {
+        return "V-${version}-${release ? 'release' : 'debug'}"
+    }
+}
+//设置Project的版本号，参数可以是任何对象，gradle内部会使用 toString() 方法返回的值
+//setVersion([version:"1.0.0",release:true])
+version = new VersionInfo("1.0.0", true)
+println version
+group = 'projectDemo'
+
+
+//----------------------------文件操作-------------------
+def tf = mkdir("$buildDir/test")
+println "tf是否创建成功 ${tf.exists()}"
+delete(tf.path)
+println "tf是否创建成功 ${tf.exists()}"
+
+mkdir("$buildDir/test2")
+mkdir("$buildDir/test3")
+mkdir("$buildDir/test4")
+def tf2 = file("$buildDir/test2")
+println "tf2文件定位是否成功 ${tf2.exists()}"
+//文件集合
+FileCollection fc = files("$buildDir/test2", "$buildDir/test3", "$buildDir/test4")
+fc.each {
+    File f ->
+        println "f name $f.name"
+}
+def sfc = fc.getFiles()
+println "sfc $sfc"
+//----------------文件树-------------------
+file("${buildDir}/t1.txt").createNewFile()
+file("${buildDir}/t2.txt").createNewFile()
+file("${buildDir}/t1.java").createNewFile()
+//1.通过一个基准目录创建文件树，参数可以是相对目录，也可以是绝对目录，与file()方法一样
+def ftre = fileTree("build")
+
+println "ftre--- " + ftre
+//添加包含规则 递归目录需要两个**/
+ftre.include "**/*.xml", "**/*.txt", "**/*.java", "**/*en*/**"
+//添加排除规则
+ftre.exclude "*.java"
+//ftre.exclude "**/*.xml"
+ftre.each {
+    f ->
+        println "ftres-- $f"
+}
+//2.通过map配置来创建文件树，可配置的选项有：dir: ''、include: '[]、exclude: []、includes: []、excludes: []
+fileTree(dir: "app", includes: ["**/*.java", "**/*.xml"], excludes: ["**/*.xml"]).each {
+    println "ft-- $it"
+}
+//3.通过闭包来创建文件树
+fileTree("app") {
+    exclude "**/*.java", "**/*.png"
+}.each {
+    println "ft2-- $it"
+}
+
+
+//-----------------Copy-----------------
+
+task testCopyFile(type: Copy) {
+//    from ("build/t1.java"){
+//
+//    }
+    from fileTree("build")
+    include "*.java"
+//    exclude "*.xml"
+    into "build/test2/"
+
+    //原名，现名，可以用正则表达式 (.*)保留占位符，$1,$2,$3.....替换符
+//    rename 't1', 'test1'
+    rename 't(.*)', 'test$1'
+    //对复制的文件重命名：通过闭包来映射
+//    rename { fileName ->
+//        //增加 rename_ 前缀
+//        return fileName.endsWith(".java") ? "rename_" + fileName : fileName
+//    }
+}
+
+//--------------projects--------------
+//allprojects{}
+//subprojects{}
+project(":app", {
+    //扩展属性
+    ext {
+        versionName = "1.0"
+    }
+})
+
+
+
+

@@ -2,6 +2,11 @@ apply plugin: 'com.android.application'
 //配置自定义插件
 apply plugin: 'com.plugindemo'
 
+//projectDemo.gradle 98行
+println versionName
+
+//android 内部 的 extension 嵌套关键类BaseExtension
+// android 的 Extension是通过插件创建的
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -31,12 +36,13 @@ android {
         }
     }
     //组合所有的flavors，修改输出目录
-    applicationVariants.all {
-        appendVersionNameVersionCode(it, defaultConfig)
-    }
+//    applicationVariants.all {
+//        appendVersionNameVersionCode(it, defaultConfig)
+//    }
     //四种组合，
     flavorDimensions "cooperator", "model"
     productFlavors {
+
         cooperatorA {
             applicationIdSuffix ".cooperatora"
             manifestPlaceholders = [UMENG_VALUE: "cooperatorA"]
@@ -60,11 +66,11 @@ android {
             resValue "color", "flavor_color", "#ff0000"
             dimension "model"
         }
-        modelC {
-            resValue "string", "app_name", "GradleDemoC"
-            resValue "color", "flavor_color", "#ffffff"
-            dimension "model"
-        }
+//        modelC {
+//            resValue "string", "app_name", "GradleDemoC"
+//            resValue "color", "flavor_color", "#ffffff"
+//            dimension "model"
+//        }
     }
     //变体过滤器 过滤掉modelC的release包
     variantFilter {
@@ -79,12 +85,13 @@ android {
     }
 
     task printFlavor {
+
         //自定义任务属性 使用方法 printFlavor.myProperty
         ext.myProperty = "myValue"
         group "userDefined"
         description "输出一哈Flavor组合"
         applicationVariants.all {
-            println it.name
+//            println it.name
         }
         println "----------------taskNames-----------"
         println gradle.startParameter.taskNames.toString()
@@ -100,9 +107,11 @@ android {
     //动态任务
     4.times {
         counter ->
-            task "task$counter" << {
+            task "task$counter" {
                 group "userdefined"
-                println "Im task number $counter"
+                doLast {
+                    println "Im task number $counter"
+                }
             }
     }
     //加入任务 执行顺序2，3，0
@@ -114,38 +123,70 @@ android {
     task0.doLast {
         println "hello doLast"
     }
-    task0 << {
-        println "hello <<"
+    task0 {
+        doLast {
+            println "hello <<"
+        }
     }
     //默认任务 gradle -q
     //等价于 gradle clean run.
     // 在一个多项目构建中, 每一个子项目都可以有它特别的默认任务. 如果一个子项目没有特别的默认任务, 父项目的默认任务将会被执行.
     defaultTasks "dTask1", "dTask2"
 
-    task dTask1 << {
-        println "Hello dTask1"
+    task dTask1 {
+        doLast {
+            println "Hello dTask1"
+        }
     }
-    task dTask2 << {
-        println "Hello dTask2"
+    task dTask2 {
+        doLast {
+            println "Hello dTask2"
+        }
     }
+
+    //TaskExecutionGraph
+    TaskExecutionGraph taskGraph = gradle.getTaskGraph()
+    //任务执行前调用
+    taskGraph.whenReady {
+        println "--,task whenReady"
+    }
+
+    //任务执行前调用
+    taskGraph.beforeTask { Task task ->
+        println "--,任务名称：${task.name} beforeTask"
+    }
+
+    //任务执行后调用
+    taskGraph.afterTask { Task task ->
+        println "--,任务名称：${task.name} afterTask"
+    }
+
 }
 
-static def appendVersionNameVersionCode(variant, defaultConfig) {
-    variant.outputs.each { output ->
-//        if (output.zipAlign) {
-        def file = output.outputFile
-        def fileName = file.name.replace(".apk", "_" + defaultConfig.versionName + ".apk").replaceFirst("app", "rent_customer").replace("-", "_")
-        output.outputFileName = fileName
-//        }
-//        else {
-//            def file = output.outputFileName
-//            def fileName = file.replace(".apk", "_" + defaultConfig.versionName + ".apk").replaceFirst("app", "rent_customer").replace("-", "_")
-//            output.outputFileName = fileName
-//        }
 
-    }
+//static def appendVersionNameVersionCode(variant, defaultConfig) {
+//    variant.outputs.each { output ->
+////        if (output.zipAlign) {
+//        def file = output.outputFile
+//        def fileName = file.name.replace(".apk", "_" + defaultConfig.versionName + ".apk").replaceFirst("app", "rent_customer").replace("-", "_")
+//        output.outputFileName = fileName
+////        }
+////        else {
+////            def file = output.outputFileName
+////            def fileName = file.replace(".apk", "_" + defaultConfig.versionName + ".apk").replaceFirst("app", "rent_customer").replace("-", "_")
+////            output.outputFileName = fileName
+////        }
+//
+//    }
+//
+//}
+//创建一个Configuration 远程仓库jar可以下载下来，但无法产生依赖，原因不明
+configurations {
+    myDebugApk
 }
-
+repositories {
+    mavenCentral()
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
@@ -153,6 +194,10 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    myDebugApk 'com.squareup.okhttp3:logging-interceptor:3.9.1'
+    myDebugApk 'com.squareup.retrofit2:converter-gson:2.1.0'
+    implementation 'com.yanzhenjie:recyclerview-swipe:1.0.4'
+//    implementation 'com.google.code.gson:gson:2.8.5'
 }
 pluginExt {
     param1 = 'app param1'
@@ -163,3 +208,22 @@ pluginExt {
 
     }
 }
+//apply from:'taskInterface.gradle'
+//apply from: 'taskContainer.gradle'
+//apply from: 'taskIO.gradle'
+
+println ",--APP子项目配置开始---"
+
+//project 配置之后
+afterEvaluate {
+    println ",--APP子项目afterEvaluate回调..."
+}
+
+task appTest {
+    println ",--APP子项目里任务配置---"
+    doLast {
+        println ",--执行子项目任务..."
+    }
+}
+
+println ",--APP子项目配置结束---"

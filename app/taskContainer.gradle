@@ -1,0 +1,87 @@
+import org.gradle.api.internal.artifacts.configurations.DefaultConfiguration
+
+//org.gradle.api.tasks.TaskContainer接口：
+////查找task
+//findByPath(path: String): Task
+//getByPath(path: String): Task
+//getByName(name: String): Task
+//withType(type: Class): TaskCollection
+//matching(condition: Closure): TaskCollection
+//
+////创建task
+//create(name: String): Task
+//create(name: String, configure: Closure): Task
+//create(name: String, type: Class): Task
+//create(options: Map<String, ?>): Task
+//create(options: Map<String, ?>, configure: Closure): Task
+//
+////当task被加入到TaskContainer时的监听
+//whenTaskAdded(action: Closure)
+
+
+getTasks().whenTaskAdded {
+    Task task ->
+//        println "The task ${task.getName()} is added to the TaskContainer"
+}
+getTasks().create("cTask1", {
+    group = "cTask"
+})
+
+
+//def task3 = getTasks().findByPath(':app:printFlavor')
+def task3 = getTasks().findByName('printFlavor')
+println "findByName() return task is " + task3.group + "-----" + task3.description
+//查找具有给定名称的项目，如果改项目不存在，创建并将其添加到此容器，
+def maybeTask = tasks.maybeCreate("maybeTask1")
+println "maybeCreate() return task is " + maybeTask + "-----" + maybeTask.group
+def maybeCTask1 = tasks.maybeCreate('cTask1')
+println "maybeCreate() return task is " + maybeCTask1 + "-----" + maybeCTask1.group
+
+
+
+
+
+
+
+
+configurations.each {
+    Configuration config ->
+//        println "configurations Name " + config.name
+}
+Configuration config = configurations.maybeCreate('myDependency')
+//两种方法二选一
+config.defaultDependencies{ dependencies ->
+    dependencies.add(owner.project.dependencies.create("com.google.zxing:core:3.3.3"))
+}
+Dependency dependency = dependencies.create("com.github.bumptech.glide:glide:3.7.0")
+config.dependencies.add(dependency)
+println "config path" + config.asPath
+//解析 myDebugApk configuration 输出路径
+Configuration myConfiguration=configurations['myDebugApk']
+Configuration impConfiguration = configurations.implementation
+
+myConfiguration.allDependencies.each {
+    println  "myDebugApk allDependencies "+it.name
+}
+impConfiguration.allDependencies.each {
+    println  "implementation allDependencies "+it.name
+}
+//println "status "+myConfiguration.state
+//println "status "+impConfiguration.state
+//println "transitive "+myConfiguration.transitive
+//println "transitive "+impConfiguration.transitive
+//println "class "+myConfiguration.getClass().properties
+//println "class "+impConfiguration.getClass().properties
+
+//task preCompileJsps {
+//    doLast {
+//        ant.taskdef(classname: 'org.apache.jasper.JspC',
+//                name: 'myDebugApk',
+//                classpath: configurations.myDebugApk.asPath)
+//        ant.myDebugApk(validateXml: false,
+//                uriroot: file('src/main/webapp'),
+//                outputDir: file("$buildDir/compiled-jsps"))
+//    }
+//}
+
+

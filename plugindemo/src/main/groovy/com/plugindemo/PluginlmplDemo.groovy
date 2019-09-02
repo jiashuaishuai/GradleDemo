@@ -13,10 +13,12 @@ public class PluginlmplDemo implements Plugin<Project> {
         project.task('customTask', type: CustomTask)
         //一定要加入<< 或者doLast{} 否则外部参数拿不到
         //加入队列
-        project.task("testTask") << {
+        project.task("testTask") {
             group 'userDefined'
             description 'gradle插件测试demo'
-            println "哈哈哈哈"+project.extensions.pluginExt.param1
+            doLast {
+                println "哈哈哈哈" + project.extensions.pluginExt.param1
+            }
         }
     }
 }

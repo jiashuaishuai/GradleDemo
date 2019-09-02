@@ -4,5 +4,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.plugindemo</groupId>
   <artifactId>plugindemo</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
+  <dependencies>
+    <dependency>
+      <groupId>com.android.tools.build</groupId>
+      <artifactId>gradle</artifactId>
+      <version>3.0.1</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
 </project>

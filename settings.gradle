@@ -1,1 +1,84 @@
+gradle.settingsEvaluated {
+    println('settings 文件解析完成')
+}
+
+gradle.projectsLoaded {
+    println('项目加载完成')
+    gradle.rootProject.subprojects.each { pro ->
+        pro.beforeEvaluate {
+            println("${pro.name} 项目配置之前调用")
+        }
+        pro.afterEvaluate{
+            println("${pro.name} 项目配置之后调用")
+        }
+    }
+}
+
+gradle.projectsEvaluated {
+    println('项目解析完成')
+}
+
+gradle.beforeProject { proj ->
+    println "settings：执行${proj.name} beforeProject"
+}
+
+gradle.afterProject { proj ->
+    println "settings：执行${proj.name} afterProject"
+}
+
+gradle.buildStarted {
+    println('构建开始')
+}
+
+gradle.buildFinished {
+    println('构建完成')
+}
+
+
+gradle.addBuildListener(new BuildListener() {
+    @Override
+    void buildStarted(Gradle gradle) {
+        println('构建开始')
+        // 这个回调一般不会调用，因为我们注册的时机太晚，注册的时候构建已经开始了，是 gradle 内部使用的
+    }
+
+    @Override
+    void settingsEvaluated(Settings settings) {
+        println('settings 文件解析完成')
+    }
+
+    @Override
+    void projectsLoaded(Gradle gradle) {
+        println('项目加载完成')
+        gradle.rootProject.subprojects.each { pro ->
+            pro.beforeEvaluate {
+                println("${pro.name} 项目配置之前调用")
+            }
+            pro.afterEvaluate{
+                println("${pro.name} 项目配置之后调用")
+            }
+        }
+    }
+
+    @Override
+    void projectsEvaluated(Gradle gradle) {
+        println('项目解析完成')
+    }
+
+    @Override
+    void buildFinished(BuildResult result) {
+        println('构建完成')
+    }
+})
+
+gradle.taskGraph.whenReady {
+    println("task 图构建完成")
+}
+gradle.taskGraph.beforeTask {
+    println("每个 task 执行前会调这个接口")
+}
+gradle.taskGraph.afterTask {
+    println("每个 task 执行完成会调这个接口")
+}
+
 include ':app', ':plugindemo'
