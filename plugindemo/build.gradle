@@ -3,10 +3,10 @@ apply plugin: 'java'
 apply plugin: 'maven'
 dependencies {
     //gradle sdk
-    compile gradleApi()
+    implementation gradleApi()
     //groovy sdk
-    compile localGroovy()
-    compile 'com.android.tools.build:gradle:3.0.1'
+    implementation localGroovy()
+    implementation "com.android.tools.build:gradle:4.1.1"
 }
 
 repositories {
